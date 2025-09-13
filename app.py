@@ -1,10 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+import os
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import math
 
-app = FastAPI(title="Path Lamps Game Simulator")
+app = FastAPI(title="Path Lamps Game Simulator", static_files=StaticFiles(directory="static"), docs_url=None)
 
 class LampSpec(BaseModel):
     bright: float
@@ -72,6 +75,10 @@ def simulate_game(path_length: int, lamps: List[dict], lamp_assignment: Optional
         if not indiv_success:
             overall_success = False
     return {"success": overall_success, "lamp_assignment": node_to_lamp, "results": results}
+
+@app.get("/")
+async def index():
+    return HTMLResponse(content=INDEX_HTML)
 
 @app.post("/simulate")
 async def simulate(payload: SimInput):
