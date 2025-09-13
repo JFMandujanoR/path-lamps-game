@@ -11,10 +11,12 @@
         <h1>Path Lamps Game</h1>
         <canvas id="gameCanvas" width="900" height="300"></canvas>
         <div class="controls">
-               <div id="summaryGraph" class="summary-graph"></div>
-            <form id="exampleForm">
-                <label for="exampleInput">Example Parameters (JSON):</label><br>
-                <textarea id="exampleInput" rows="12" cols="60"></textarea><br>
+            <div id="summaryGraph" class="summary-graph"></div>
+            <form id="orderForm">
+                <label for="lampOrder">Lamp Order (comma separated indices, e.g. 4,3,2,1,0):</label><br>
+                <input type="text" id="lampOrder" value="0,1,2,3,4" size="30"><br>
+                <label for="indOrder">Individual Order (comma separated indices, e.g. 1,0):</label><br>
+                <input type="text" id="indOrder" value="0,1" size="10"><br>
                 <button type="button" id="startBtn">Start Simulation</button>
             </form>
         </div>

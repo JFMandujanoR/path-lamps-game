@@ -3,24 +3,25 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 const startBtn = document.getElementById('startBtn');
-const exampleInput = document.getElementById('exampleInput');
+const lampOrderInput = document.getElementById('lampOrder');
+const indOrderInput = document.getElementById('indOrder');
 const resultPre = document.getElementById('result');
 const summaryGraph = document.getElementById('summaryGraph');
 const successIndicator = document.getElementById('successIndicator');
 
 // Load example.json into textarea
+let exampleData = null;
 fetch('/static/example.json')
     .then(r => r.json())
     .then(data => {
-        exampleInput.value = JSON.stringify(data, null, 2);
+        exampleData = data;
         renderSummary(data);
     });
-function renderSummary(data) {
     let html = '';
     html += `<strong>Individuals:</strong> ${data.individuals.length}<br>`;
     html += '<ul>';
     data.individuals.forEach((ind, i) => {
-        html += `<li>Individual ${i+1}: Speed = ${ind.speed}, Start Delay = ${ind.start_delay}</li>`;
+        html += `<li>Individual ${i+1}: Speed = ${ind.speed}, Start Delay = ${ind.start_delay !== undefined ? ind.start_delay : 0}</li>`;
     });
     html += '</ul>';
     html += `<strong>Lamps:</strong> ${data.lamps.length}<br>`;
@@ -119,13 +120,33 @@ function runSimulation(simData) {
 
 startBtn.onclick = async function() {
     if (simulationRunning) return;
-    let simData;
-    try {
-        simData = JSON.parse(exampleInput.value);
-    } catch (e) {
-        statusDiv.textContent = 'Invalid JSON!';
+    if (!exampleData) return;
+    // Get lamp order
+    let lampOrder = lampOrderInput.value.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+    if (lampOrder.length !== exampleData.lamps.length) {
+        statusDiv.textContent = 'Lamp order must have ' + exampleData.lamps.length + ' indices.';
         return;
     }
+    // Get individual order
+    let indOrder = indOrderInput.value.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+    if (indOrder.length !== exampleData.individuals.length) {
+        statusDiv.textContent = 'Individual order must have ' + exampleData.individuals.length + ' indices.';
+        return;
+    }
+    // Build individuals array with auto start_delay
+    let indivs = indOrder.map((idx, i) => {
+        let ind = {...exampleData.individuals[idx]};
+        // Start delay: each starts after previous finishes (simple: path_length / speed)
+        ind.start_delay = i === 0 ? 0 : exampleData.path_length / exampleData.individuals[indOrder[i-1]].speed;
+        return ind;
+    });
+    // Build simData
+    let simData = {
+        path_length: exampleData.path_length,
+        lamps: exampleData.lamps,
+        lamp_assignment: lampOrder,
+        individuals: indivs
+    };
     renderSummary(simData);
     // Send to backend for simulation result
     const resp = await fetch('/simulate', {
