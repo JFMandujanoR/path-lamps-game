@@ -17,6 +17,7 @@ fetch('/static/example.json')
         exampleData = data;
         renderSummary(data);
     });
+function renderSummary(data) {
     let html = '';
     html += `<strong>Individuals:</strong> ${data.individuals.length}<br>`;
     html += '<ul>';
