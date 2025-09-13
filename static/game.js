@@ -22,15 +22,16 @@ function renderSummary(data) {
     html += `<strong>Individuals:</strong> ${data.individuals.length}<br>`;
     html += '<ul>';
     data.individuals.forEach((ind, i) => {
-        html += `<li>Individual ${i+1}: Speed = ${ind.speed}, Start Delay = ${ind.start_delay !== undefined ? ind.start_delay : 0}</li>`;
+        html += `<li><b>[${i}]</b> Individual ${i+1}: Speed = <b>${ind.speed}</b>, Start Delay = ${ind.start_delay !== undefined ? ind.start_delay : 0}</li>`;
     });
     html += '</ul>';
     html += `<strong>Lamps:</strong> ${data.lamps.length}<br>`;
     html += '<ul>';
     data.lamps.forEach((lamp, i) => {
-        html += `<li>Lamp ${i+1}: Bright = ${lamp.bright}s, Dark = ${lamp.dark}s</li>`;
+        html += `<li><b>[${i}]</b> Lamp ${i+1}: Bright = <b>${lamp.bright}s</b>, Dark = <b>${lamp.dark}s</b></li>`;
     });
     html += '</ul>';
+    html += `<small>Use the indices <b>[0]</b>, <b>[1]</b>, ... above to enter your desired order for lamps and individuals.</small>`;
     summaryGraph.innerHTML = html;
 }
 
