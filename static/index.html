@@ -11,9 +11,14 @@
         <h1>Path Lamps Game</h1>
         <canvas id="gameCanvas" width="900" height="300"></canvas>
         <div class="controls">
-            <button id="startBtn">Start Simulation</button>
+            <form id="exampleForm">
+                <label for="exampleInput">Example Parameters (JSON):</label><br>
+                <textarea id="exampleInput" rows="12" cols="60"></textarea><br>
+                <button type="button" id="startBtn">Start Simulation</button>
+            </form>
         </div>
         <div id="status"></div>
+        <pre id="result"></pre>
     </div>
     <script src="game.js"></script>
 </body>

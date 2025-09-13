@@ -1,22 +1,27 @@
-// Simple visualization logic for Path Lamps Game
+
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 const startBtn = document.getElementById('startBtn');
+const exampleInput = document.getElementById('exampleInput');
+const resultPre = document.getElementById('result');
 
-// Example data (should be fetched from backend)
-let nodes = 10;
-let lamps = [2, 5, 8]; // Example lamp positions
-let individuals = [
-    {id: 1, speed: 1.5, color: '#ff6f61'},
-    {id: 2, speed: 1.0, color: '#6b5b95'},
-    {id: 3, speed: 2.0, color: '#88b04b'}
-];
+// Load example.json into textarea
+fetch('static/example.json')
+  .then(r => r.json())
+  .then(data => {
+    exampleInput.value = JSON.stringify(data, null, 2);
+  });
+
+let nodes = 5;
+let lamps = [0,1,2,3,4];
+let individuals = [];
 let pathLength = 800;
 let nodeSpacing = pathLength / (nodes - 1);
 let lampStates = Array(nodes).fill(false);
 let simulationRunning = false;
-let positions = Array(individuals.length).fill(0);
+let positions = [];
+let indivColors = ['#ff6f61','#6b5b95','#88b04b','#f7cac9','#92a8d1','#955251'];
 
 function drawPath() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -49,44 +54,67 @@ function drawPath() {
     individuals.forEach((ind, i) => {
         ctx.beginPath();
         ctx.arc(50 + positions[i], 150, 10, 0, 2 * Math.PI);
-        ctx.fillStyle = ind.color;
+        ctx.fillStyle = indivColors[i % indivColors.length];
         ctx.fill();
         ctx.strokeStyle = '#333';
         ctx.stroke();
     });
 }
 
-function updateSimulation() {
-    // Simple lamp logic: lamps turn on when individual is near
+function runSimulation(simData) {
+    // Prepare for animation
+    nodes = simData.path_length;
+    lamps = simData.lamp_assignment;
+    individuals = simData.individuals;
+    pathLength = 800;
+    nodeSpacing = pathLength / (nodes - 1);
     lampStates = Array(nodes).fill(false);
-    individuals.forEach((ind, i) => {
-        let nodeIdx = Math.round(positions[i] / nodeSpacing);
-        if (lamps.includes(nodeIdx)) lampStates[nodeIdx] = true;
-    });
-    // Move individuals
-    let allDone = true;
-    individuals.forEach((ind, i) => {
-        if (positions[i] < pathLength) {
-            positions[i] += ind.speed * 2;
-            allDone = false;
-        }
-    });
+    positions = Array(individuals.length).fill(0);
+    simulationRunning = true;
+    statusDiv.textContent = 'Simulation running...';
     drawPath();
-    if (allDone) {
-        simulationRunning = false;
-        statusDiv.textContent = 'Simulation complete!';
-    } else {
-        setTimeout(updateSimulation, 60);
+    // Animate movement
+    function animateStep() {
+        lampStates = Array(nodes).fill(false);
+        individuals.forEach((ind, i) => {
+            let nodeIdx = Math.round(positions[i] / nodeSpacing);
+            if (lamps.includes(nodeIdx)) lampStates[nodeIdx] = true;
+        });
+        let allDone = true;
+        individuals.forEach((ind, i) => {
+            if (positions[i] < pathLength) {
+                positions[i] += ind.speed * 2;
+                allDone = false;
+            }
+        });
+        drawPath();
+        if (allDone) {
+            simulationRunning = false;
+            statusDiv.textContent = 'Simulation complete!';
+        } else {
+            setTimeout(animateStep, 60);
+        }
     }
+    animateStep();
 }
 
-startBtn.onclick = function() {
-    if (!simulationRunning) {
-        positions = Array(individuals.length).fill(0);
-        simulationRunning = true;
-        statusDiv.textContent = 'Simulation running...';
-        updateSimulation();
+startBtn.onclick = async function() {
+    if (simulationRunning) return;
+    let simData;
+    try {
+        simData = JSON.parse(exampleInput.value);
+    } catch (e) {
+        statusDiv.textContent = 'Invalid JSON!';
+        return;
     }
+    // Send to backend for simulation result
+    const resp = await fetch('/simulate', {
+        method: 'POST',
+        headers: {'content-type': 'application/json'},
+        body: JSON.stringify(simData)
+    });
+    const result = await resp.json();
+    resultPre.textContent = JSON.stringify(result, null, 2);
+    runSimulation(simData);
 };
 
-drawPath();

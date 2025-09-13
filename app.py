@@ -1,13 +1,13 @@
-from fastapi import FastAPI, Response
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-import os
-from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 import math
+import os
 
-app = FastAPI(title="Path Lamps Game Simulator", static_files=StaticFiles(directory="static"), docs_url=None)
+app = FastAPI(title="Path Lamps Game Simulator")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class LampSpec(BaseModel):
     bright: float
@@ -76,9 +76,12 @@ def simulate_game(path_length: int, lamps: List[dict], lamp_assignment: Optional
             overall_success = False
     return {"success": overall_success, "lamp_assignment": node_to_lamp, "results": results}
 
+
+# Serve static/index.html at root
+from fastapi.responses import FileResponse
 @app.get("/")
 async def index():
-    return HTMLResponse(content=INDEX_HTML)
+    return FileResponse(os.path.join("static", "index.html"))
 
 @app.post("/simulate")
 async def simulate(payload: SimInput):
@@ -90,42 +93,4 @@ async def simulate(payload: SimInput):
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
 
-INDEX_HTML = """
-<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Path Lamps Game</title></head>
-<body>
-<h2>Path Lamps Game Simulator</h2>
-<textarea id="payload" rows=15 cols=70>
-{
-  "path_length": 5,
-  "lamps": [
-    {"bright": 1.0, "dark": 1.0},
-    {"bright": 0.8, "dark": 1.2},
-    {"bright": 1.5, "dark": 0.5},
-    {"bright": 1.0, "dark": 1.0},
-    {"bright": 0.7, "dark": 1.3}
-  ],
-  "lamp_assignment": [0,1,2,3,4],
-  "individuals": [
-    {"speed": 1.0, "start_delay": 0.0},
-    {"speed": 0.8, "start_delay": 0.3}
-  ]
-}
-</textarea>
-<br><button onclick="runSim()">Run Simulation</button>
-<pre id="out"></pre>
-<script>
-async function runSim(){
-  const p = JSON.parse(document.getElementById("payload").value);
-  const r = await fetch("/simulate", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(p)});
-  document.getElementById("out").innerText = JSON.stringify(await r.json(), null, 2);
-}
-</script>
-</body>
-</html>
-"""
-
-@app.get("/", response_class=HTMLResponse)
-async def index():
-    return INDEX_HTML
+ # ...existing code...
