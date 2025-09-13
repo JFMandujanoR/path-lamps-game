@@ -5,13 +5,32 @@ const statusDiv = document.getElementById('status');
 const startBtn = document.getElementById('startBtn');
 const exampleInput = document.getElementById('exampleInput');
 const resultPre = document.getElementById('result');
+const summaryGraph = document.getElementById('summaryGraph');
+const successIndicator = document.getElementById('successIndicator');
 
 // Load example.json into textarea
-fetch('static/example.json')
-  .then(r => r.json())
-  .then(data => {
-    exampleInput.value = JSON.stringify(data, null, 2);
-  });
+fetch('/static/example.json')
+    .then(r => r.json())
+    .then(data => {
+        exampleInput.value = JSON.stringify(data, null, 2);
+        renderSummary(data);
+    });
+function renderSummary(data) {
+    let html = '';
+    html += `<strong>Individuals:</strong> ${data.individuals.length}<br>`;
+    html += '<ul>';
+    data.individuals.forEach((ind, i) => {
+        html += `<li>Individual ${i+1}: Speed = ${ind.speed}, Start Delay = ${ind.start_delay}</li>`;
+    });
+    html += '</ul>';
+    html += `<strong>Lamps:</strong> ${data.lamps.length}<br>`;
+    html += '<ul>';
+    data.lamps.forEach((lamp, i) => {
+        html += `<li>Lamp ${i+1}: Bright = ${lamp.bright}s, Dark = ${lamp.dark}s</li>`;
+    });
+    html += '</ul>';
+    summaryGraph.innerHTML = html;
+}
 
 let nodes = 5;
 let lamps = [0,1,2,3,4];
@@ -107,6 +126,7 @@ startBtn.onclick = async function() {
         statusDiv.textContent = 'Invalid JSON!';
         return;
     }
+    renderSummary(simData);
     // Send to backend for simulation result
     const resp = await fetch('/simulate', {
         method: 'POST',
@@ -115,6 +135,13 @@ startBtn.onclick = async function() {
     });
     const result = await resp.json();
     resultPre.textContent = JSON.stringify(result, null, 2);
+    if (result.success) {
+        successIndicator.textContent = 'Arrangement is SUCCESSFUL!';
+        successIndicator.className = 'success-indicator success';
+    } else {
+        successIndicator.textContent = 'Arrangement is NOT successful.';
+        successIndicator.className = 'success-indicator fail';
+    }
     runSimulation(simData);
 };
 
