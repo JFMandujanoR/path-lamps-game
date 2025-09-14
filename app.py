@@ -1,9 +1,8 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
-import math
 import os
 
 app = FastAPI(title="Path Lamps Game Simulator")
@@ -51,34 +50,33 @@ def simulate_game(path_length: int, lamps: List[dict], lamp_assignment: Optional
             raise ValueError("Speed must be positive.")
         dt_edge = 1.0 / speed
         indiv_success = True
-        timeline = []
         for node in range(N):
             t_node = start_delay + node * dt_edge
             lamp_idx = node_to_lamp[node]
             lamp = lamps[lamp_idx]
             lit = is_lamp_bright_at(t_node, lamp["bright"], lamp["dark"], eps)
-            timeline.append({
-                "node": node,
-                "time": round(t_node, 6),
-                "lamp_index": lamp_idx,
-                "lamp_bright": lit
-            })
             if not lit:
                 indiv_success = False
+                break
         results.append({
-            "individual_id": pid,
+            "id": pid + 1,   # 1-based for display
             "speed": speed,
-            "start_delay": start_delay,
-            "success": indiv_success,
-            "timeline": timeline
+            "success": indiv_success
         })
         if not indiv_success:
             overall_success = False
-    return {"success": overall_success, "lamp_assignment": node_to_lamp, "results": results}
 
+    # Build clean summary (no raw timelines)
+    summary = {
+        "success": overall_success,
+        "individuals": results,
+        "lamps": [
+            {"id": i + 1, "bright": l["bright"], "dark": l["dark"]}
+            for i, l in enumerate(lamps)
+        ]
+    }
+    return summary
 
-# Serve static/index.html at root
-from fastapi.responses import FileResponse
 @app.get("/")
 async def index():
     return FileResponse(os.path.join("static", "index.html"))
@@ -92,5 +90,3 @@ async def simulate(payload: SimInput):
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
-
- # ...existing code...

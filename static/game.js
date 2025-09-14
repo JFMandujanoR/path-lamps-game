@@ -17,21 +17,17 @@ fetch('/static/example.json')
         renderSummary(data);
     });
 
+// Preview input before simulation (simpler, no start_delay)
 function renderSummary(data) {
-    let html = '';
-    html += `<strong>Individuals:</strong> ${data.individuals.length}<br>`;
-    html += '<ul>';
+    let html = `<strong>Individuals:</strong> ${data.individuals.length}<ul>`;
     data.individuals.forEach((ind, i) => {
-        html += `<li><b>[${i}]</b> Individual ${i+1}: Speed = <b>${ind.speed}</b>, Start Delay = ${ind.start_delay !== undefined ? ind.start_delay : 0}</li>`;
+        html += `<li>Individual ${i + 1}: Speed = <b>${ind.speed}</b></li>`;
     });
-    html += '</ul>';
-    html += `<strong>Lamps:</strong> ${data.lamps.length}<br>`;
-    html += '<ul>';
+    html += `</ul><strong>Lamps:</strong> ${data.lamps.length}<ul>`;
     data.lamps.forEach((lamp, i) => {
-        html += `<li><b>[${i}]</b> Lamp ${i+1}: Bright = <b>${lamp.bright}s</b>, Dark = <b>${lamp.dark}s</b></li>`;
+        html += `<li>Lamp ${i + 1}: Bright = <b>${lamp.bright}s</b>, Dark = <b>${lamp.dark}s</b></li>`;
     });
-    html += '</ul>';
-    html += `<small>Use the indices <b>[0]</b>, <b>[1]</b>, ... above to enter your desired order for lamps and individuals.</small>`;
+    html += `</ul><small>Use the indices <b>[0]</b>, <b>[1]</b>, ... to enter your desired order for lamps and individuals.</small>`;
     summaryGraph.innerHTML = html;
 }
 
@@ -54,6 +50,7 @@ function drawPath() {
     ctx.moveTo(50, 150);
     ctx.lineTo(850, 150);
     ctx.stroke();
+
     // Draw nodes
     for (let i = 0; i < nodes; i++) {
         ctx.beginPath();
@@ -63,6 +60,7 @@ function drawPath() {
         ctx.strokeStyle = '#3a7bd5';
         ctx.stroke();
     }
+
     // Draw lamps
     lamps.forEach(idx => {
         ctx.beginPath();
@@ -72,6 +70,7 @@ function drawPath() {
         ctx.strokeStyle = '#ffd700';
         ctx.stroke();
     });
+
     // Draw individuals
     individuals.forEach((ind, i) => {
         ctx.beginPath();
@@ -119,6 +118,39 @@ function runSimulation(simData) {
     animateStep();
 }
 
+// Render backend result in a user-friendly way
+function renderBackendResult(result) {
+    let html = "";
+
+    // Individuals
+    html += `<h3>👤 Individuals (${result.individuals.length})</h3><ul>`;
+    result.individuals.forEach((ind, i) => {
+        const status = ind.success ? "✅ success" : "❌ fail";
+        html += `<li>Individual ${i + 1} → Speed: <b>${ind.speed}</b> (${status})</li>`;
+    });
+    html += "</ul>";
+
+    // Lamps
+    html += `<h3>💡 Lamps (${result.lamps.length})</h3><ul>`;
+    result.lamps.forEach((lamp, i) => {
+        html += `<li>Lamp ${i + 1} → Bright: <b>${lamp.bright}s</b>, Dark: <b>${lamp.dark}s</b></li>`;
+    });
+    html += "</ul>";
+
+    // Final success/fail
+    if (result.success) {
+        successIndicator.textContent = "✅ SUCCESS";
+        successIndicator.className = "success-indicator success";
+        html += `<p style="color: green; font-weight: bold;">Arrangement is successful!</p>`;
+    } else {
+        successIndicator.textContent = "❌ FAIL";
+        successIndicator.className = "success-indicator fail";
+        html += `<p style="color: red; font-weight: bold;">Arrangement is NOT successful.</p>`;
+    }
+
+    resultMessage.innerHTML = html;
+}
+
 startBtn.onclick = async function() {
     if (simulationRunning) return;
     if (!exampleData) return;
@@ -147,6 +179,7 @@ startBtn.onclick = async function() {
         lamp_assignment: lampOrder,
         individuals: indivs
     };
+
     renderSummary(simData);
 
     const resp = await fetch('/simulate', {
@@ -157,15 +190,7 @@ startBtn.onclick = async function() {
     const result = await resp.json();
 
     statusDiv.textContent = 'Simulation result received.';
-    resultMessage.textContent = result.message; // 🔹 Show backend message
-
-    if (result.success) {
-        successIndicator.textContent = 'Arrangement is SUCCESSFUL!';
-        successIndicator.className = 'success-indicator success';
-    } else {
-        successIndicator.textContent = 'Arrangement is NOT successful.';
-        successIndicator.className = 'success-indicator fail';
-    }
+    renderBackendResult(result);
 
     runSimulation(simData);
 };
