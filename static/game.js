@@ -94,6 +94,7 @@ function runSimulation(simData) {
     positions = Array(individuals.length).fill(0);
     simulationRunning = true;
     statusDiv.textContent = 'Simulation running...';
+    console.log('Starting simulation with data:', simData);
     drawPath();
     // Animate movement
     function animateStep() {
@@ -157,7 +158,8 @@ startBtn.onclick = async function() {
         body: JSON.stringify(simData)
     });
     const result = await resp.json();
-    // No raw JSON output
+    console.log('Simulation result:', result);
+    statusDiv.textContent = 'Simulation result received.';
     if (result.success) {
         successIndicator.textContent = 'Arrangement is SUCCESSFUL!';
         successIndicator.className = 'success-indicator success';
