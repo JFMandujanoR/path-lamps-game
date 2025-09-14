@@ -157,7 +157,7 @@ startBtn.onclick = async function() {
         body: JSON.stringify(simData)
     });
     const result = await resp.json();
-    resultPre.textContent = JSON.stringify(result, null, 2);
+    resultPre.textContent = '';
     if (result.success) {
         successIndicator.textContent = 'Arrangement is SUCCESSFUL!';
         successIndicator.className = 'success-indicator success';
