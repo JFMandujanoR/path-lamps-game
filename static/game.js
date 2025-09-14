@@ -5,7 +5,7 @@ const statusDiv = document.getElementById('status');
 const startBtn = document.getElementById('startBtn');
 const lampOrderInput = document.getElementById('lampOrder');
 const indOrderInput = document.getElementById('indOrder');
-const resultPre = document.getElementById('result');
+// Removed resultPre: no more raw JSON output
 const summaryGraph = document.getElementById('summaryGraph');
 const successIndicator = document.getElementById('successIndicator');
 
@@ -157,7 +157,7 @@ startBtn.onclick = async function() {
         body: JSON.stringify(simData)
     });
     const result = await resp.json();
-    resultPre.textContent = '';
+    // No raw JSON output
     if (result.success) {
         successIndicator.textContent = 'Arrangement is SUCCESSFUL!';
         successIndicator.className = 'success-indicator success';
