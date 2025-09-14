@@ -1,13 +1,12 @@
-
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const statusDiv = document.getElementById('status');
 const startBtn = document.getElementById('startBtn');
 const lampOrderInput = document.getElementById('lampOrder');
 const indOrderInput = document.getElementById('indOrder');
-// Removed resultPre: no more raw JSON output
 const summaryGraph = document.getElementById('summaryGraph');
 const successIndicator = document.getElementById('successIndicator');
+const resultMessage = document.getElementById('resultMessage'); // 🔹 new
 
 // Load example.json into textarea
 let exampleData = null;
@@ -17,6 +16,7 @@ fetch('/static/example.json')
         exampleData = data;
         renderSummary(data);
     });
+
 function renderSummary(data) {
     let html = '';
     html += `<strong>Individuals:</strong> ${data.individuals.length}<br>`;
@@ -84,7 +84,6 @@ function drawPath() {
 }
 
 function runSimulation(simData) {
-    // Prepare for animation
     nodes = simData.path_length;
     lamps = simData.lamp_assignment;
     individuals = simData.individuals;
@@ -94,9 +93,8 @@ function runSimulation(simData) {
     positions = Array(individuals.length).fill(0);
     simulationRunning = true;
     statusDiv.textContent = 'Simulation running...';
-    console.log('Starting simulation with data:', simData);
     drawPath();
-    // Animate movement
+
     function animateStep() {
         lampStates = Array(nodes).fill(false);
         individuals.forEach((ind, i) => {
@@ -124,26 +122,25 @@ function runSimulation(simData) {
 startBtn.onclick = async function() {
     if (simulationRunning) return;
     if (!exampleData) return;
-    // Get lamp order
+
     let lampOrder = lampOrderInput.value.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
     if (lampOrder.length !== exampleData.lamps.length) {
         statusDiv.textContent = 'Lamp order must have ' + exampleData.lamps.length + ' indices.';
         return;
     }
-    // Get individual order
+
     let indOrder = indOrderInput.value.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
     if (indOrder.length !== exampleData.individuals.length) {
         statusDiv.textContent = 'Individual order must have ' + exampleData.individuals.length + ' indices.';
         return;
     }
-    // Build individuals array with auto start_delay
+
     let indivs = indOrder.map((idx, i) => {
         let ind = {...exampleData.individuals[idx]};
-        // Start delay: each starts after previous finishes (simple: path_length / speed)
         ind.start_delay = i === 0 ? 0 : exampleData.path_length / exampleData.individuals[indOrder[i-1]].speed;
         return ind;
     });
-    // Build simData
+
     let simData = {
         path_length: exampleData.path_length,
         lamps: exampleData.lamps,
@@ -151,15 +148,17 @@ startBtn.onclick = async function() {
         individuals: indivs
     };
     renderSummary(simData);
-    // Send to backend for simulation result
+
     const resp = await fetch('/simulate', {
         method: 'POST',
         headers: {'content-type': 'application/json'},
         body: JSON.stringify(simData)
     });
     const result = await resp.json();
-    console.log('Simulation result:', result);
+
     statusDiv.textContent = 'Simulation result received.';
+    resultMessage.textContent = result.message; // 🔹 Show backend message
+
     if (result.success) {
         successIndicator.textContent = 'Arrangement is SUCCESSFUL!';
         successIndicator.className = 'success-indicator success';
@@ -167,6 +166,6 @@ startBtn.onclick = async function() {
         successIndicator.textContent = 'Arrangement is NOT successful.';
         successIndicator.className = 'success-indicator fail';
     }
+
     runSimulation(simData);
 };
-

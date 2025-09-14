@@ -10,6 +10,7 @@
     <div class="container">
         <h1>Path Lamps Game</h1>
         <canvas id="gameCanvas" width="900" height="300"></canvas>
+
         <div class="controls">
             <div id="summaryGraph" class="summary-graph"></div>
             <form id="orderForm">
@@ -20,37 +21,18 @@
                 <button type="button" id="startBtn">Start Simulation</button>
             </form>
         </div>
+
+        <!-- Game status -->
         <div id="status"></div>
-           <div id="successIndicator" class="success-indicator"></div>
-    <!-- Removed raw JSON output -->
+
+        <!-- 🔹 Grouped results nicely -->
+        <div class="result-container">
+            <div id="successIndicator" class="success-indicator"></div>
+            <div id="resultMessage"></div>
+        </div>
     </div>
-       <style>
-       .summary-graph {
-           margin: 24px auto 16px auto;
-           max-width: 700px;
-           background: #f7fafc;
-           border-radius: 8px;
-           box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-           padding: 16px;
-           text-align: left;
-           font-size: 1rem;
-       }
-       .success-indicator {
-           margin: 16px auto;
-           font-size: 1.3rem;
-           font-weight: bold;
-           color: #fff;
-           padding: 10px 24px;
-           border-radius: 8px;
-           display: inline-block;
-       }
-       .success-indicator.success {
-           background: #4bb543;
-       }
-       .success-indicator.fail {
-           background: #e74c3c;
-       }
-       </style>
+
+    <!-- External JS -->
     <script src="/static/game.js"></script>
 </body>
 </html>
